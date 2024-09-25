@@ -84,3 +84,39 @@ pheatmap(case_matrix,
          color = viridis::viridis(100), 
          display_numbers = F,  # Optional: shows the case counts on the tiles
          main = "Hierarchically Clustered Case Counts")
+
+
+#What proportion of cases in the district are covered in each commune
+
+b1 <- a2 %>%
+  arrange(District, Year, -dengue) %>%
+  group_by(District, Year) %>%
+  mutate(prop = dengue/sum(dengue),
+         cum_prop = cumsum(prop),
+         rank=row_number(),
+         proportion_cases_top3 = sum(dengue*(rank<3)) /sum(dengue)
+         )%>%
+  ungroup() %>%
+  group_by(District) 
+  
+prop_commune <- reshape2::dcast(b1,District+Communes~Year, value.var='prop')  
+
+
+prop_range <- b1 %>%
+  ungroup() %>%
+  group_by(District, Communes) %>%
+  summarize(min_prop=min(prop),
+            max_prop=max(prop),
+            median_prop=median(prop),
+            mean_cases=mean(dengue),
+            mean_rank= mean(rank)
+            )%>%
+  mutate(prop_range=max_prop-min_prop,
+         optum= min_prop*max_prop*(median_prop>=0.15))%>%
+  ungroup()%>%
+arrange(-optum)
+
+ggplot(prop_range, aes(y=min_prop, x=max_prop))+
+  geom_point()
+
+write.csv(prop_range,'./Data/CONFIDENTIAL/proportion_cases_district.csv')
