@@ -16,10 +16,15 @@ a2 <- a1 %>%
          )
   
 grav <- a1 %>%
-  group_by(Communes, Year) %>%
-  mutate( wgt = Dengue/sum(Dengue),
+  ungroup() %>%
+  group_by(District,Communes, Year) %>%
+  mutate( wgt = Dengue/sum(Dengue, na.rm=T),
           week_wgt = wgt*week) %>%
-  summarize(center_of_gravity = sum(week_wgt))
+  filter(!is.nan(sum(week_wgt)) & !is.na(week_wgt) & !is.na(sum(week_wgt)) ) %>%
+  summarize(center_of_gravity = sum(week_wgt, na.rm=T),
+            nwks=n())
+
+
 
 a3 <- a2 %>%
   ungroup() %>%
