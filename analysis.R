@@ -15,6 +15,11 @@ a2 <- a1 %>%
          commune2= paste(District, Communes, sep='_') 
          )
   
+grav <- a1 %>%
+  group_by(Communes, Year) %>%
+  mutate( wgt = Dengue/sum(Dengue),
+          week_wgt = wgt*week) %>%
+  summarize(center_of_gravity = sum(week_wgt))
 
 a3 <- a2 %>%
   ungroup() %>%
